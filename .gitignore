@@ -39,3 +39,9 @@ Thumbs.db
 *.bak
 *.swp
 *.swo
+
+# uv
+uv.lock
+
+# ruff
+.ruff_cache

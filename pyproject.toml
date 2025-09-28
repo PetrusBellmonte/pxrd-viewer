@@ -6,13 +6,17 @@ authors = [
     { name = "Petrus Bellmonte", email = "mail@bellmonte.de" }
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "streamlit>=1.49",
     "streamlit-shortcuts==1.2.1",
-    "ruff>=0.13.0",
     "plotly"
 ]
+
+[dependency-groups]
+test = ["pytest"]
+lint = ["ruff>=0.13.0"]
+dev = [ {include-group = "test"}, {include-group = "lint"} ]
 
 [lint]
 select = ["E", "F", "W"]
