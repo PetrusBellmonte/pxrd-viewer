@@ -7,12 +7,13 @@ WORKDIR /app
 # Copy project files
 COPY . /app
 
-# Install pip and poetry
+# Install pip and pip-tools
 RUN pip install --upgrade pip && \
-    pip install poetry
+    pip install pip-tools
 
-# Install dependencies from pyproject.toml
-RUN poetry install --no-interaction --no-ansi
+# Compile and install dependencies from pyproject.toml
+RUN pip-compile pyproject.toml --output-file requirements.txt && \
+    pip install -r requirements.txt
 
 # Expose Streamlit default port
 EXPOSE 8501
