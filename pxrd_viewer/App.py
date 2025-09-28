@@ -25,6 +25,7 @@ class Line:
         width: int = 2.0,
         **kwargs,
     ):
+        assert spectrum is not None, "Spectrum must be provided."
         return cls(
             spectrum=spectrum,
             color=color,
@@ -47,6 +48,10 @@ st.sidebar.header("Configuration")
 # Load spectra from data_sources
 spectra = list_available_spectra()
 spectrum_names = [s.name for s in spectra]
+
+if len(spectra) == 0:
+    st.warning("No spectra available. Please add spectra first.")
+    st.stop()
 
 # Session state for spectra in view and rotation element
 if "active_lines" not in st.session_state:
@@ -79,11 +84,14 @@ def next_spectrum(spectrum: Spectrum | None = None) -> Spectrum:
     @param spectrum: The current spectrum to find the next of.
     @return: The next spectrum in the list, or the first one if None is given.
     """
+    assert len(spectra) > 0, "No spectra available."
     if spectrum is None:
         return spectra[0]
     for i, s in enumerate(spectra):
         if s == spectrum:
             return spectra[(i + 1) % len(spectra)]
+    else:
+        raise ValueError("Given spectrum is not in the list of available spectra.")
 
 
 # Features for the rotating through spectra
@@ -112,13 +120,14 @@ if st.session_state.rotation_line:
         st.session_state.rotation_line = None
     if not st.session_state.rotation_line:  # Clear if deleted or pinned
         potential_interface.empty()
-        if potential_interface.button("Activate Rotation Element"):
+        if potential_interface.button("Activate Spectrum Rotation"):
             pass
 
 
 # List all active lines including selected and rotation
 def all_active_lines():
-    yield st.session_state.selected_line
+    if st.session_state.selected_line:
+        yield st.session_state.selected_line
     if st.session_state.rotation_line:
         yield st.session_state.rotation_line
     yield from st.session_state.active_lines

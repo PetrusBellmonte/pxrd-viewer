@@ -5,7 +5,8 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy project files
-COPY . /app
+COPY pxrd_viewer /app
+COPY pyproject.toml /app
 
 # Install pip and pip-tools
 RUN pip install --upgrade pip && \
