@@ -2,6 +2,7 @@ from pathlib import Path
 import numpy as np
 import io
 import yaml
+import functools
 
 DATA_DIR = Path(__file__).parent / "spectra"
 DATA_DIR.mkdir(exist_ok=True)
@@ -188,31 +189,7 @@ def load_xyd_file(uploaded_file: io.BytesIO) -> tuple[np.ndarray, np.ndarray]:
     return x, y
 
 
-def save_new_spectrum(
-    name: str, uploaded_file: io.BytesIO, contained_elements: set[str], tags: list[str]
-) -> Spectrum:
-    source_file = DATA_DIR / f"{name}.npz"
-    if source_file.exists():
-        raise FileExistsError(f"Spectrum with name '{name}' already exists.")
-    x, y = load_xyd_file(uploaded_file)
-    np.savez_compressed(source_file, x=x, y=y)
-    meta_file = DATA_DIR / f"{name}.meta"
-    meta_data = {
-        "name": name,
-        "source_file": source_file.name,
-        "contained_elements": list(contained_elements),
-        "tags": tags,
-    }
-    with open(meta_file, "w") as f:
-        yaml.dump(meta_data, f)
-    return Spectrum(
-        name=name,
-        source_file=source_file,
-        contained_elements=contained_elements,
-        tags=tags,
-    )
-
-
+@functools.cache
 def list_available_spectra() -> list[Spectrum]:
     """
     Lists all available spectra.
@@ -240,6 +217,49 @@ def list_available_spectra() -> list[Spectrum]:
         )
         spectra.append(spectrum)
     return spectra
+
+
+def save_new_spectrum(
+    name: str, uploaded_file: io.BytesIO, contained_elements: set[str], tags: list[str]
+) -> Spectrum:
+    source_file = DATA_DIR / f"{name}.npz"
+    if source_file.exists():
+        raise FileExistsError(f"Spectrum with name '{name}' already exists.")
+    x, y = load_xyd_file(uploaded_file)
+    np.savez_compressed(source_file, x=x, y=y)
+    meta_file = DATA_DIR / f"{name}.meta"
+    meta_data = {
+        "name": name,
+        "source_file": source_file.name,
+        "contained_elements": list(contained_elements),
+        "tags": tags,
+    }
+    with open(meta_file, "w") as f:
+        yaml.dump(meta_data, f)
+    # Invalidate cache after saving new spectrum
+    list_available_spectra.cache_clear()
+    return Spectrum(
+        name=name,
+        source_file=source_file,
+        contained_elements=contained_elements,
+        tags=tags,
+    )
+
+def delete_spectrum(spectrum: Spectrum) -> None:
+    """
+    Deletes a spectrum and its metadata by Spectrum object.
+
+    Args:
+        spectrum (Spectrum): The Spectrum object to delete.
+    """
+    source_file = spectrum.source_file
+    meta_file = DATA_DIR / f"{spectrum.name}.meta"
+    if not source_file.exists() or not meta_file.exists():
+        raise FileNotFoundError(f"Spectrum '{spectrum.name}' does not exist.")
+    source_file.unlink()
+    meta_file.unlink()
+    list_available_spectra.cache_clear()
+
 
 def list_used_tags() -> set[str]:
     tags = set()
