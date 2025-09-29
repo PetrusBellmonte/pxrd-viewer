@@ -240,3 +240,9 @@ def list_available_spectra() -> list[Spectrum]:
         )
         spectra.append(spectrum)
     return spectra
+
+def list_used_tags() -> set[str]:
+    tags = set()
+    for spectrum in list_available_spectra():
+        tags.update(spectrum.tags)
+    return tags

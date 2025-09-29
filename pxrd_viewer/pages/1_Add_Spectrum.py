@@ -1,6 +1,6 @@
 import streamlit as st
 from pathlib import Path
-from data_sources import ALL_ELEMENTS, save_new_spectrum
+from data_sources import ALL_ELEMENTS, list_used_tags, save_new_spectrum
 import io
 
 st.set_page_config(
@@ -30,14 +30,7 @@ with st.form("upload_form", clear_on_submit=True):
     st.markdown("#### Specify tags")
     tags = st.multiselect(
         "Tags",
-        options=[
-            "experiment1",
-            "high-temp",
-            "low-temp",
-            "reference",
-            "sampleA",
-            "sampleB",
-        ],
+        options=list_used_tags(),
         help="Select or add tags to categorize your spectrum.",
         accept_new_options=True,
     )
