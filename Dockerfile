@@ -1,23 +1,28 @@
-# Use official Python image
-FROM python:3.11-slim
+# ----------- Builder stage -----------
+FROM python:3.11-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy project files
-COPY pxrd_viewer /app
 COPY pyproject.toml /app
 
-# Install pip and pip-tools
 RUN pip install --upgrade pip && \
-    pip install pip-tools
+    pip install pip-tools wheel
 
-# Compile and install dependencies from pyproject.toml
+# Compile requirements and build wheels
 RUN pip-compile pyproject.toml --output-file requirements.txt && \
-    pip install -r requirements.txt
+    pip wheel --wheel-dir=/app/wheels -r requirements.txt
 
-# Expose Streamlit default port
+# ----------- Final stage -----------
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY pxrd_viewer /app/pxrd_viewer
+COPY --from=builder /app/wheels /wheels
+
+RUN pip install --upgrade pip && \
+    pip install --no-index --find-links=/wheels /wheels/*
+
 EXPOSE 8501
 
-# Run Streamlit app
 CMD ["streamlit", "run", "App.py"]
