@@ -18,6 +18,7 @@ message_placeholder = st.empty()
 with st.form("upload_form", clear_on_submit=True):
     st.markdown("#### Upload new spectrum")
     spectrum_name = st.text_input("Spectrum name (unique, no spaces)", max_chars=50)
+    description = st.text_area("Description", help="Describe this spectrum (optional)")
     uploaded_file = st.file_uploader("Choose a spectrum file", type=["xyd"])
 
     selected_elements = st.multiselect(
@@ -43,5 +44,11 @@ with st.form("upload_form", clear_on_submit=True):
         else:
             save_path = DATA_DIR / f"{spectrum_name}.xyd"
             file_bytes = io.BytesIO(uploaded_file.getbuffer())
-            save_new_spectrum(spectrum_name, file_bytes, set(selected_elements), tags)
+            save_new_spectrum(
+                name=spectrum_name,
+                uploaded_file=file_bytes,
+                contained_elements=set(selected_elements),
+                tags=tags,
+                description=description
+            )
             message_placeholder.success("Spectrum uploaded successfully!")

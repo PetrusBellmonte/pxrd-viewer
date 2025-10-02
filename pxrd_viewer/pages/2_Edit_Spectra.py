@@ -10,9 +10,11 @@ st.set_page_config(
 
 st.title("Edit Saved Spectra")
 
+message_placeholder = st.empty()
+
 spectra = list_available_spectra()
 if not spectra:
-    st.info("No spectra available to edit.")
+    message_placeholder.info("No spectra available to edit.")
     st.stop()
 
 spectrum_names = [s.name for s in spectra]
@@ -22,6 +24,7 @@ spectrum = next(s for s in spectra if s.name == selected_name)
 
 st.markdown("#### Edit spectrum metadata")
 new_name = st.text_input("Spectrum name", value=spectrum.name)
+new_description = st.text_area("Description", value=getattr(spectrum, "description", ""), help="Describe this spectrum (optional)")
 new_elements = st.multiselect(
     "Contained elements",
     options=ALL_ELEMENTS,
@@ -32,17 +35,17 @@ new_tags = st.multiselect("Tags", options=list_used_tags(), default=list(spectru
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Save Changes", use_container_width=True):
-        # Use edit_spectrum from data_sources
         try:
             edit_spectrum(
                 old_spectrum=spectrum,
                 new_name=new_name,
                 contained_elements=set(new_elements),
                 tags=list(new_tags),
+                description=new_description
             )
-            st.success("Spectrum metadata updated!")
+            message_placeholder.success("Spectrum metadata updated!")
         except Exception as e:
-            st.error(f"Error updating spectrum: {e}")
+            message_placeholder.error(f"Error updating spectrum: {e}")
 
 with col2:
     if st.button("Delete Spectrum", type="primary", help="Delete this spectrum", use_container_width=True):
@@ -52,6 +55,6 @@ with col2:
         )
         try:
             delete_spectrum(spectrum)
-            st.success(f"Spectrum '{spectrum.name}' deleted!")
+            message_placeholder.success(f"Spectrum '{spectrum.name}' deleted!")
         except Exception as e:
-            st.error(f"Error deleting spectrum: {e}")
+            message_placeholder.error(f"Error deleting spectrum: {e}")
