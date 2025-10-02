@@ -18,6 +18,7 @@ message_placeholder = st.empty()
 with st.form("upload_form", clear_on_submit=True):
     st.markdown("#### Upload new spectrum")
     spectrum_name = st.text_input("Spectrum name (unique, no spaces)", max_chars=50)
+    display_name = st.text_input("Display name (optional)", help="Human-friendly name for display (optional)")
     description = st.text_area("Description", help="Describe this spectrum (optional)")
     uploaded_file = st.file_uploader("Choose a spectrum file", type=["xyd"])
 
@@ -49,6 +50,7 @@ with st.form("upload_form", clear_on_submit=True):
                 uploaded_file=file_bytes,
                 contained_elements=set(selected_elements),
                 tags=tags,
-                description=description
+                description=description,
+                display_name=display_name if display_name else None
             )
             message_placeholder.success("Spectrum uploaded successfully!")

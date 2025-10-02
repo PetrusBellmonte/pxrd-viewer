@@ -24,6 +24,7 @@ spectrum = next(s for s in spectra if s.name == selected_name)
 
 st.markdown("#### Edit spectrum metadata")
 new_name = st.text_input("Spectrum name", value=spectrum.name)
+new_display_name = st.text_input("Display name (optional)", value=getattr(spectrum, "display_name", ""), help="Human-friendly name for display (optional)")
 new_description = st.text_area("Description", value=getattr(spectrum, "description", ""), help="Describe this spectrum (optional)")
 new_elements = st.multiselect(
     "Contained elements",
@@ -41,7 +42,8 @@ with col1:
                 new_name=new_name,
                 contained_elements=set(new_elements),
                 tags=list(new_tags),
-                description=new_description
+                description=new_description,
+                display_name=new_display_name if new_display_name else None
             )
             message_placeholder.success("Spectrum metadata updated!")
         except Exception as e:

@@ -20,6 +20,7 @@ class Spectrum:
         contained_elements: set[str] = None,
         tags: list[str] = None,
         description: str = "",
+        display_name: str = None,
     ):
         self.name = name
         self.source_file = source_file
@@ -33,6 +34,7 @@ class Spectrum:
         )
         self.tags = tags if tags is not None else []
         self.description = description
+        self.display_name = display_name
 
     def _load_data(self):
         """
@@ -58,6 +60,10 @@ class Spectrum:
         if not isinstance(value, Spectrum):
             return False
         return self.name == value.name and self.source_file == value.source_file
+
+    @property
+    def readable_name(self):
+        return self.display_name if self.display_name else self.name
 
 
 ALL_ELEMENTS = [
@@ -211,6 +217,7 @@ def list_available_spectra() -> list[Spectrum]:
         contained_elements = set(meta.get("contained_elements", []))
         tags = meta.get("tags", [])
         description = meta.get("description", "")
+        display_name = meta.get("display_name", None)
         source_file = meta_file.parent / meta.get("source_file")
         spectrum = Spectrum(
             name=name,
@@ -218,13 +225,14 @@ def list_available_spectra() -> list[Spectrum]:
             contained_elements=contained_elements,
             tags=tags,
             description=description,
+            display_name=display_name,
         )
         spectra.append(spectrum)
     return spectra
 
 
 def save_new_spectrum(
-    name: str, uploaded_file: io.BytesIO, contained_elements: set[str], tags: list[str], description: str = ""
+    name: str, uploaded_file: io.BytesIO, contained_elements: set[str], tags: list[str], description: str = "", display_name: str = None
 ) -> Spectrum:
     source_file = DATA_DIR / f"{name}.npz"
     if source_file.exists():
@@ -238,6 +246,7 @@ def save_new_spectrum(
         "contained_elements": list(contained_elements),
         "tags": tags,
         "description": description,
+        "display_name": display_name,
     }
     with open(meta_file, "w") as f:
         yaml.dump(meta_data, f)
@@ -248,6 +257,7 @@ def save_new_spectrum(
         contained_elements=contained_elements,
         tags=tags,
         description=description,
+        display_name=display_name,
     )
 
 def delete_spectrum(spectrum: Spectrum) -> None:
@@ -271,6 +281,7 @@ def edit_spectrum(
     contained_elements: set[str] = None,
     tags: list[str] = None,
     description: str = None,
+    display_name: str = None,
 ) -> Spectrum:
     """
     Edits the metadata of an existing spectrum.
@@ -292,6 +303,7 @@ def edit_spectrum(
     updated_elements = contained_elements if contained_elements is not None else old_spectrum.contained_elements
     updated_tags = tags if tags is not None else old_spectrum.tags
     updated_description = description if description is not None else getattr(old_spectrum, "description", "")
+    updated_display_name = display_name if display_name is not None else getattr(old_spectrum, "display_name", None)
     source_file = old_spectrum.source_file
 
     # If renaming, update file names
@@ -311,6 +323,7 @@ def edit_spectrum(
         "contained_elements": list(updated_elements),
         "tags": updated_tags,
         "description": updated_description,
+        "display_name": updated_display_name,
     }
     with open(meta_file, "w") as f:
         yaml.dump(meta_data, f)
@@ -322,6 +335,7 @@ def edit_spectrum(
         contained_elements=set(updated_elements),
         tags=updated_tags,
         description=updated_description,
+        display_name=updated_display_name,
     )
 
 

@@ -14,6 +14,7 @@ class Line:
     title: str = None
     can_be_deleted: bool = True
     inverse: bool = True
+    display_name: str = None
 
     @classmethod
     def from_spectrum(
@@ -26,6 +27,8 @@ class Line:
         **kwargs,
     ):
         assert spectrum is not None, "Spectrum must be provided."
+        if 'display_name' not in kwargs:
+            kwargs['display_name'] = spectrum.readable_name
         return cls(
             spectrum=spectrum,
             color=color,
@@ -137,11 +140,20 @@ def all_active_lines():
 graph_appearance_location = st.sidebar
 graph_appearance_location.header("Spectra in View")
 for line in all_active_lines():
-    title = line.spectrum.name
+    assert line.display_name is not None
+    title = line.display_name
     if line.title:
         title = f"{line.title} {title}"
     potential_interface = graph_appearance_location.empty()
     with potential_interface.expander(title):
+        # Editable display_name for the line
+        new_display_name = st.text_input(
+            "Display name", value=line.display_name, key=f"display_name_{id(line)}"
+        )
+        if new_display_name != line.display_name:
+            line.display_name = new_display_name if new_display_name else line.spectrum.readable_name
+            st.rerun()
+
         line.color = st.color_picker("Color", line.color, key=f"color_{id(line)}")
         line.opacity = st.slider(
             "Opacity", 0.0, 1.0, line.opacity, 0.05, key=f"opacity_{id(line)}"
@@ -173,7 +185,7 @@ def add_line_to_fig(line: Line):
             x=line.spectrum.x,
             y=-line.spectrum.y if line.inverse else line.spectrum.y,
             mode="lines",
-            name=line.spectrum.name,
+            name=line.display_name,
             line=dict(color=line.color, width=line.width, dash=line.dash),
             opacity=line.opacity,
         )
