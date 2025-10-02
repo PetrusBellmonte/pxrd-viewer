@@ -167,6 +167,10 @@ for line in all_active_lines():
         line.width = st.slider(
             "Stroke width", 0.5, 10.0, line.width, 0.5, key=f"width_{id(line)}"
         )
+        
+        line.inverse = st.checkbox(
+            "Invert spectrum", value=line.inverse, key=f"inverse_{id(line)}"
+        )
         if st.button("Delete", key=f"delete_{id(line)}"):
             for idx, running_line in enumerate(st.session_state.active_lines):
                 if running_line == line:
