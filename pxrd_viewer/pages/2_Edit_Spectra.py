@@ -1,7 +1,6 @@
 import streamlit as st
-from data_sources import delete_spectrum, list_available_spectra, ALL_ELEMENTS, list_used_tags, save_new_spectrum
+from data_sources import delete_spectrum, edit_spectrum, list_available_spectra, ALL_ELEMENTS, list_used_tags
 from pathlib import Path
-import io
 import yaml
 
 st.set_page_config(
@@ -33,22 +32,17 @@ new_tags = st.multiselect("Tags", options=list_used_tags(), default=list(spectru
 col1, col2 = st.columns(2)
 with col1:
     if st.button("Save Changes", use_container_width=True):
-        # Update meta file only (not spectrum data)
-        meta_file = spectrum.source_file.parent / f"{spectrum.name}.meta"
-        new_meta_file = spectrum.source_file.parent / f"{new_name}.meta"
-        meta_data = {
-            "name": new_name,
-            "source_file": spectrum.source_file.name,
-            "contained_elements": list(new_elements),
-            "tags": list(new_tags),
-        }
-        # Remove old meta if name changed
-        if new_name != spectrum.name and meta_file.exists():
-            meta_file.unlink()
-        with open(new_meta_file, "w") as f:
-            yaml.dump(meta_data, f)
-        st.success("Spectrum metadata updated!")
-        st.experimental_rerun()
+        # Use edit_spectrum from data_sources
+        try:
+            edit_spectrum(
+                old_spectrum=spectrum,
+                new_name=new_name,
+                contained_elements=set(new_elements),
+                tags=list(new_tags),
+            )
+            st.success("Spectrum metadata updated!")
+        except Exception as e:
+            st.error(f"Error updating spectrum: {e}")
 
 with col2:
     if st.button("Delete Spectrum", type="primary", help="Delete this spectrum", use_container_width=True):
@@ -56,6 +50,8 @@ with col2:
             "<style>.stButton button {background-color: #d9534f; color: white;}</style>",
             unsafe_allow_html=True,
         )
-        delete_spectrum(spectrum)
-        st.success(f"Spectrum '{spectrum.name}' deleted!")
-        st.rerun()
+        try:
+            delete_spectrum(spectrum)
+            st.success(f"Spectrum '{spectrum.name}' deleted!")
+        except Exception as e:
+            st.error(f"Error deleting spectrum: {e}")

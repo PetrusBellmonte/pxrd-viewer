@@ -260,6 +260,61 @@ def delete_spectrum(spectrum: Spectrum) -> None:
     meta_file.unlink()
     list_available_spectra.cache_clear()
 
+def edit_spectrum(
+    old_spectrum: Spectrum,
+    new_name: str = None,
+    contained_elements: set[str] = None,
+    tags: list[str] = None,
+) -> Spectrum:
+    """
+    Edits the metadata of an existing spectrum.
+
+    Args:
+        old_spectrum (Spectrum): The Spectrum object to edit.
+        new_name (str, optional): The new name for the spectrum.
+        contained_elements (set[str], optional): New set of contained elements.
+        tags (list[str], optional): New list of tags.
+
+    Returns:
+        Spectrum: The updated Spectrum object.
+    """
+    meta_file = DATA_DIR / f"{old_spectrum.name}.meta"
+    if not meta_file.exists():
+        raise FileNotFoundError(f"Spectrum '{old_spectrum.name}' does not exist.")
+
+    updated_name = new_name if new_name is not None else old_spectrum.name
+    updated_elements = contained_elements if contained_elements is not None else old_spectrum.contained_elements
+    updated_tags = tags if tags is not None else old_spectrum.tags
+    source_file = old_spectrum.source_file
+
+    # If renaming, update file names
+    if new_name and new_name != old_spectrum.name:
+        new_source_file = DATA_DIR / f"{new_name}.npz"
+        new_meta_file = DATA_DIR / f"{new_name}.meta"
+        if new_source_file.exists() or new_meta_file.exists():
+            raise FileExistsError(f"Spectrum with name '{new_name}' already exists.")
+        source_file.rename(new_source_file)
+        meta_file.rename(new_meta_file)
+        source_file = new_source_file
+        meta_file = new_meta_file
+
+    meta_data = {
+        "name": updated_name,
+        "source_file": source_file.name,
+        "contained_elements": list(updated_elements),
+        "tags": updated_tags,
+    }
+    with open(meta_file, "w") as f:
+        yaml.dump(meta_data, f)
+
+    list_available_spectra.cache_clear()
+    return Spectrum(
+        name=updated_name,
+        source_file=source_file,
+        contained_elements=set(updated_elements),
+        tags=updated_tags,
+    )
+
 
 def list_used_tags() -> set[str]:
     tags = set()
