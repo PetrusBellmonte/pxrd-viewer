@@ -36,6 +36,26 @@ class Spectrum:
         self.description = description
         self.display_name = display_name
 
+    @staticmethod
+    def from_meta(meta: dict, meta_file: Path) -> "Spectrum":
+        """
+        Create a Spectrum instance from meta dictionary and meta file path.
+        """
+        name = meta.get("name")
+        contained_elements = set(meta.get("contained_elements", []))
+        tags = meta.get("tags", [])
+        description = meta.get("description", "")
+        display_name = meta.get("display_name", None)
+        source_file = meta_file.parent / meta.get("source_file")
+        return Spectrum(
+            name=name,
+            source_file=source_file,
+            contained_elements=contained_elements,
+            tags=tags,
+            description=description,
+            display_name=display_name,
+        )
+
     def _load_data(self):
         """
         Loads the spectrum data from the source file.
@@ -213,20 +233,7 @@ def list_available_spectra() -> list[Spectrum]:
         assert "source_file" in meta, (
             f"Meta file {meta_file} is missing 'source_file' field."
         )
-        name = meta.get("name")
-        contained_elements = set(meta.get("contained_elements", []))
-        tags = meta.get("tags", [])
-        description = meta.get("description", "")
-        display_name = meta.get("display_name", None)
-        source_file = meta_file.parent / meta.get("source_file")
-        spectrum = Spectrum(
-            name=name,
-            source_file=source_file,
-            contained_elements=contained_elements,
-            tags=tags,
-            description=description,
-            display_name=display_name,
-        )
+        spectrum = Spectrum.from_meta(meta, meta_file)
         spectra.append(spectrum)
     return spectra
 
