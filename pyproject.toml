@@ -20,5 +20,7 @@ test = ["pytest"]
 lint = ["ruff>=0.13.0"]
 dev = [ {include-group = "test"}, {include-group = "lint"} ]
 
-[lint]
+
+[tool.ruff.lint]
 select = ["E", "F", "W"]
+ignore = ["E731"]

@@ -239,7 +239,12 @@ def list_available_spectra() -> list[Spectrum]:
 
 
 def save_new_spectrum(
-    name: str, uploaded_file: io.BytesIO, contained_elements: set[str], tags: list[str], description: str = "", display_name: str = None
+    name: str,
+    uploaded_file: io.BytesIO,
+    contained_elements: set[str],
+    tags: list[str],
+    description: str = "",
+    display_name: str = None,
 ) -> Spectrum:
     source_file = DATA_DIR / f"{name}.npz"
     if source_file.exists():
@@ -267,6 +272,7 @@ def save_new_spectrum(
         display_name=display_name,
     )
 
+
 def delete_spectrum(spectrum: Spectrum) -> None:
     """
     Deletes a spectrum and its metadata by Spectrum object.
@@ -281,6 +287,7 @@ def delete_spectrum(spectrum: Spectrum) -> None:
     source_file.unlink()
     meta_file.unlink()
     list_available_spectra.cache_clear()
+
 
 def edit_spectrum(
     old_spectrum: Spectrum,
@@ -307,10 +314,22 @@ def edit_spectrum(
         raise FileNotFoundError(f"Spectrum '{old_spectrum.name}' does not exist.")
 
     updated_name = new_name if new_name is not None else old_spectrum.name
-    updated_elements = contained_elements if contained_elements is not None else old_spectrum.contained_elements
+    updated_elements = (
+        contained_elements
+        if contained_elements is not None
+        else old_spectrum.contained_elements
+    )
     updated_tags = tags if tags is not None else old_spectrum.tags
-    updated_description = description if description is not None else getattr(old_spectrum, "description", "")
-    updated_display_name = display_name if display_name is not None else getattr(old_spectrum, "display_name", None)
+    updated_description = (
+        description
+        if description is not None
+        else getattr(old_spectrum, "description", "")
+    )
+    updated_display_name = (
+        display_name
+        if display_name is not None
+        else getattr(old_spectrum, "display_name", None)
+    )
     source_file = old_spectrum.source_file
 
     # If renaming, update file names

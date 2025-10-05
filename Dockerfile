@@ -25,4 +25,4 @@ RUN pip install --upgrade pip && \
 
 EXPOSE 8501
 
-CMD ["python", "pxrd_viewer/new_app.py"]
+CMD ["python", "pxrd_viewer/app.py"]
