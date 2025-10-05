@@ -11,7 +11,8 @@ dependencies = [
     "streamlit>=1.49",
     "streamlit-shortcuts==1.2.1",
     "plotly",
-    "PyYAML"
+    "PyYAML",
+    "nicegui>=3.0.0",
 ]
 
 [dependency-groups]
