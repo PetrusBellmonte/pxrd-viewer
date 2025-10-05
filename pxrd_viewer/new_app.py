@@ -235,4 +235,4 @@ def main():
                 app.storage.client['line_controls'] = line_controls
 
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(title="PXRD Viewer")
+    ui.run(title="PXRD Viewer",favicon="📈",reload=False)
