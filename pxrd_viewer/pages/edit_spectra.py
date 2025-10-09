@@ -48,6 +48,7 @@ def edit_spectra_page():
         update_selected_spectrum(spectra[0])
 
         async def on_save():
+            nonlocal spectra
             # Validate
             if not spectrum_name.value:
                 ui.notify("Please enter a spectrum name.", color="negative")
@@ -59,7 +60,7 @@ def edit_spectra_page():
                 selected_spectrum = next(
                     s for s in spectra if s.name == selected_name.value
                 )
-                edit_spectrum(
+                new_spectrum = edit_spectrum(
                     old_spectrum=selected_spectrum,
                     new_name=spectrum_name.value,
                     contained_elements=set(selected_elements.value),
@@ -67,6 +68,9 @@ def edit_spectra_page():
                     description=description.value,
                     display_name=display_name.value if display_name.value else None,
                 )
+                spectra = list_available_spectra()
+                selected_name.options = [s.name for s in spectra]
+                selected_name.value = new_spectrum.name # todo make the whole data management nicer
                 ui.notify("Spectrum metadata updated!", color="positive")
             except Exception as e:
                 ui.notify(f"Error updating spectrum: {e}", color="negative")

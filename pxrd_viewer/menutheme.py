@@ -34,7 +34,7 @@ def dark():
 
     # The handler function is like this, updating specific markers:
     def handle_theme_change(e):
-        is_dark = e.args.get("is_dark", "dark")
+        is_dark = e.args.get("is_dark", "") == "dark"
         update_plot_template(is_dark)
 
     # Then bound it to ui
