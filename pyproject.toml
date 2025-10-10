@@ -8,8 +8,6 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "streamlit>=1.49",
-    "streamlit-shortcuts==1.2.1",
     "plotly",
     "PyYAML",
     "nicegui>=3.0.0",
