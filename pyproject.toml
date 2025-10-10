@@ -13,6 +13,7 @@ dependencies = [
     "plotly",
     "PyYAML",
     "nicegui>=3.0.0",
+    "numpy>=2.0.2",
 ]
 
 [dependency-groups]
