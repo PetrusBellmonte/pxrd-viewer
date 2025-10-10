@@ -3,6 +3,7 @@ from nicegui import ui, app, binding
 import plotly.graph_objects as go
 from data_sources import list_available_spectra, Spectrum
 import altui
+import os
 from pages import add_spectrum, edit_spectra  # noqa: F401
 
 
@@ -301,4 +302,5 @@ def main():
 
 
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(title="PXRD Viewer", favicon="📈", reload=False)
+    is_production = os.environ.get("PXRD_PRODUCTION", "0") == "1"
+    ui.run(title="PXRD Viewer", favicon="📈", reload=not is_production)

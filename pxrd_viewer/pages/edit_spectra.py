@@ -71,6 +71,7 @@ def edit_spectra_page():
                 spectra = list_available_spectra()
                 selected_name.options = [s.name for s in spectra]
                 selected_name.value = new_spectrum.name # todo make the whole data management nicer
+                tags.options = list(list_used_tags())
                 ui.notify("Spectrum metadata updated!", color="positive")
             except Exception as e:
                 ui.notify(f"Error updating spectrum: {e}", color="negative")
@@ -93,6 +94,7 @@ def edit_spectra_page():
                 spectrum_names = [s.name for s in spectra]
                 selected_name.options = spectrum_names
                 selected_name.value = spectra[0].name
+                tags.options = list(list_used_tags())
             except Exception as e:
                 ui.notify(f"Error deleting spectrum: {e}", color="negative")
 

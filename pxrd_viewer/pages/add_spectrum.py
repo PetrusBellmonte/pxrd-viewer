@@ -1,7 +1,7 @@
 from menutheme import register_nav_page, menutheme
 from nicegui import ui, events
 from pathlib import Path
-from data_sources import ALL_ELEMENTS, list_used_tags, save_new_spectrum
+from data_sources import ALL_ELEMENTS, list_used_tags, load_raw_file, load_xyd_file, save_new_spectrum
 import io
 import altui
 
@@ -34,8 +34,22 @@ def add_spectrum_page():
             description = ui.textarea("Description").classes("w-full")
             uploaded_file_content = {"file": None}
 
-            def handle_upload(e: events.UploadEventArguments):
-                uploaded_file_content["file"] = e.file
+            async def handle_upload(e: events.UploadEventArguments):
+                file = e.file
+                file_bytes = io.BytesIO(await file.read())
+                try:
+                    if file.name.endswith(".xyd"):
+                        spectra_content = load_xyd_file(file_bytes)
+                    elif file.name.endswith(".raw"):
+                        spectra_content = load_raw_file(file_bytes)
+                    else:
+                        raise ValueError("Unsupported file format")
+                except Exception as ex:
+                    ui.notify(f"Error loading file: {ex}", color="negative")
+                    uploaded_file.reset()
+                    print(ex)
+                    return
+                uploaded_file_content["file"] = spectra_content
 
             uploaded_file = (
                 ui.upload(
@@ -45,7 +59,7 @@ def add_spectrum_page():
                     auto_upload=True,
                     max_total_size=5 * 1024 * 1024,
                 )
-                .props("accept=.xyd")
+                .props("accept=.xyd,.raw")
                 .classes("w-full")
             )
             selected_elements = ui.select(
@@ -64,10 +78,9 @@ def add_spectrum_page():
                 elif not selected_elements.value:
                     ui.notify("Please select at least one element.", color="negative")
                 else:
-                    file_bytes = io.BytesIO(await file.read())
                     save_new_spectrum(
                         name=spectrum_name.value,
-                        uploaded_file=file_bytes,
+                        uploaded_file=file,
                         contained_elements=set(selected_elements.value),
                         tags=tags.value,
                         description=description.value,
@@ -85,6 +98,7 @@ def add_spectrum_page():
                     uploaded_file_content["file"] = None
                     selected_elements.value = []
                     tags.value = []
+                    tags.options = list(list_used_tags())
                     await spectrum_name.run_method("resetValidation")
 
             ui.button("Upload Spectrum", on_click=on_submit, color="primary").classes(

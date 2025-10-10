@@ -1,4 +1,5 @@
 from pathlib import Path
+import struct
 import numpy as np
 import io
 import yaml
@@ -216,6 +217,73 @@ def load_xyd_file(uploaded_file: io.BytesIO) -> tuple[np.ndarray, np.ndarray]:
     y = y / np.max(y)  # Normalize intensity
     return x, y
 
+def read_raw_file(data_source: io.BytesIO) -> dict:
+    data = data_source.read()
+    def read_str(offset, length):
+        return data[offset:offset+length].decode("ascii", errors="ignore").rstrip("\x00")
+
+    def read_u16(offset):
+        return struct.unpack_from("<H", data, offset)[0]
+
+    def read_u32(offset):
+        return struct.unpack_from("<I", data, offset)[0]
+
+    def read_s16_array(offset, count):
+        return struct.unpack_from(f"<{count}h", data, offset)
+    
+    def read_s32_array(offset, count):
+        return struct.unpack_from(f"<{count}i", data, offset)
+
+    def read_float(offset):
+        return struct.unpack_from("<f", data, offset)[0]
+
+    # Extract values
+    result = {
+        "format": read_str(0x00, 8),
+        "machine": read_str(0x08, 8),
+        "date": read_str(0x10, 0x10),
+        "title": read_str(0x20, 0x20),
+        "comment": read_str(0x70, 0x20),
+        "kilo_volt": read_u16(0x13E),
+        "milli_Amp": read_u16(0x140),
+        "radiation": read_float(0x142),
+        "radiation_false": read_float(0x146),
+    }
+
+
+    if not result['machine']in ['POLY II', 'Powdat']:
+        raise ValueError(f"Unsupported machine type. Got {result['machine']}, expected 'POLY II' or 'Powdat'.")
+    # DataInfo struct at 0x600 for POLY II, 0x800 for Powdat
+    info_offset = 0x600 if result['machine'] == 'POLY II' else 0x800
+    result["collection_start_date"] = read_str(info_offset, 0x10)
+    result["collection_end_date"] = read_str(info_offset+0x10, 0x10)
+    result["num_points"] = read_u16(info_offset+0x22)
+    result["theta_start"] = read_float(info_offset+0x2C) 
+    result["theta_end"] = read_float(info_offset+0x34)
+    result["theta_stepsize"] = read_float(info_offset+0x3C)
+    result["time_per_step"] = read_float(info_offset+0x44)
+    result["min_cnt"] = read_u32(info_offset+0x78)
+    result["max_cnt"] = read_u32(info_offset+0x7C)
+
+    data_offset = info_offset + 0x200
+    if result['machine'] == 'POLY II':
+        result["data"] = read_s16_array(data_offset, result["num_points"])
+    elif result['machine'] == 'Powdat':
+        result["data"] = read_s32_array(data_offset, result["num_points"])
+    return result
+
+def raw_info_to_normalized_numpy(info):
+    x = np.linspace(info["theta_start"], info["theta_end"], info["num_points"])
+    x = (4 * np.pi / info["radiation"]) * np.sin(np.radians(x) / 2)  # Convert to Q
+    y = np.array(info["data"], dtype=np.float32)
+    y /= np.max(y)  # Normalize to max of 1.0
+    return x, y
+
+def load_raw_file(uploaded_file: io.BytesIO) -> tuple[np.ndarray, np.ndarray]:
+    info = read_raw_file(uploaded_file)
+    x, y = raw_info_to_normalized_numpy(info)
+    return x, y
+
 
 @functools.cache
 def list_available_spectra() -> list[Spectrum]:
@@ -249,7 +317,7 @@ def save_new_spectrum(
     source_file = DATA_DIR / f"{name}.npz"
     if source_file.exists():
         raise FileExistsError(f"Spectrum with name '{name}' already exists.")
-    x, y = load_xyd_file(uploaded_file)
+    x, y = uploaded_file
     np.savez_compressed(source_file, x=x, y=y)
     meta_file = DATA_DIR / f"{name}.meta"
     meta_data = {
