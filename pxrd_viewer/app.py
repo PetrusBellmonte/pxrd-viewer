@@ -135,6 +135,7 @@ def update_figure(*args, **kwargs):
                 name=line.display_name,
                 line=dict(color=line.color, width=line.width, dash=line.dash),
                 opacity=line.opacity,
+                hoverinfo="none",
             )
         )
     fig.update_layout(uirevision="constant")
