@@ -9,7 +9,7 @@ def dark():
     dark.auto()
 
     # Sync plot template with dark mode
-    def update_plot_template(is_dark):
+    def update_plot_template(is_dark: bool):
         template = "plotly_dark" if is_dark else "plotly"
         with context.client.layout:
             for element in ElementFilter(kind=ui.plotly):
@@ -34,11 +34,11 @@ def dark():
 
     # The handler function is like this, updating specific markers:
     def handle_theme_change(e):
-        is_dark = e.args.get("is_dark", "") == "dark"
+        is_dark = e.args.get("is_dark", "light") == "dark"
         update_plot_template(is_dark)
 
     # Then bound it to ui
-    ui.on("theme-change", lambda e: handle_theme_change(e))
+    ui.on("theme-change", handle_theme_change)
 
     return dark
 
