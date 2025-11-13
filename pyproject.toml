@@ -23,3 +23,6 @@ dev = [ {include-group = "test"}, {include-group = "lint"} ]
 [tool.ruff.lint]
 select = ["E", "F", "W"]
 ignore = ["E731"]
+
+[tool.ruff]
+line-length = 120

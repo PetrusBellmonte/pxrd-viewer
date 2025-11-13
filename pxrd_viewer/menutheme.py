@@ -49,9 +49,7 @@ registered_pages = []
 
 def register_nav(display_name=None, route=None, **kwargs):
     def decorator(page):
-        registered_pages.append(
-            {"page": page, "name": display_name or page.__name__, "route": route}
-        )
+        registered_pages.append({"page": page, "name": display_name or page.__name__, "route": route})
         return page
 
     return decorator

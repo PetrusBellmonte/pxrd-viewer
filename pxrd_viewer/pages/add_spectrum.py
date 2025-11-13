@@ -1,7 +1,13 @@
 from menutheme import register_nav_page, menutheme
 from nicegui import ui, events
 from pathlib import Path
-from data_sources import ALL_ELEMENTS, list_used_tags, load_raw_file, load_xyd_file, save_new_spectrum
+from data_sources import (
+    ALL_ELEMENTS,
+    list_used_tags,
+    load_raw_file,
+    load_xyd_file,
+    save_new_spectrum,
+)
 import io
 import altui
 
@@ -62,12 +68,8 @@ def add_spectrum_page():
                 .props("accept=.xyd,.raw")
                 .classes("w-full")
             )
-            selected_elements = ui.select(
-                ALL_ELEMENTS, label="Contained elements", multiple=True
-            ).classes("w-full")
-            tags = altui.tag_select(list(list_used_tags()), label="Tags").classes(
-                "w-full"
-            )
+            selected_elements = ui.select(ALL_ELEMENTS, label="Contained elements", multiple=True).classes("w-full")
+            tags = altui.tag_select(list(list_used_tags()), label="Tags").classes("w-full")
 
             async def on_submit():
                 file = uploaded_file_content["file"]
@@ -89,9 +91,7 @@ def add_spectrum_page():
                     ui.notify("Spectrum uploaded successfully!", color="positive")
                     # Manually reset all fields
                     spectrum_name.value = ""
-                    await spectrum_name.run_method(
-                        "resetValidation"
-                    )  # it only works if execute twice???
+                    await spectrum_name.run_method("resetValidation")  # it only works if execute twice???
                     display_name.value = ""
                     description.value = ""
                     uploaded_file.reset()
@@ -101,6 +101,4 @@ def add_spectrum_page():
                     tags.options = list(list_used_tags())
                     await spectrum_name.run_method("resetValidation")
 
-            ui.button("Upload Spectrum", on_click=on_submit, color="primary").classes(
-                "mt-4"
-            )
+            ui.button("Upload Spectrum", on_click=on_submit, color="primary").classes("mt-4")

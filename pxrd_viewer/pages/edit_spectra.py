@@ -33,16 +33,12 @@ def edit_spectra_page():
             spectrum_names,
             label="Select a spectrum to edit",
             value=spectrum_names[0],
-            on_change=lambda e: update_selected_spectrum(
-                next(s for s in spectra if s.name == e.value)
-            ),
+            on_change=lambda e: update_selected_spectrum(next(s for s in spectra if s.name == e.value)),
         ).classes("w-full")
         spectrum_name = ui.input("Spectrum name").classes("w-full")
         display_name = ui.input("Display name (optional)").classes("w-full")
         description = ui.textarea("Description").classes("w-full")
-        selected_elements = ui.select(
-            ALL_ELEMENTS, label="Contained elements", multiple=True
-        ).classes("w-full")
+        selected_elements = ui.select(ALL_ELEMENTS, label="Contained elements", multiple=True).classes("w-full")
         tags = altui.tag_select(list(list_used_tags()), label="Tags").classes("w-full")
         # Initialize fields
         update_selected_spectrum(spectra[0])
@@ -57,9 +53,7 @@ def edit_spectra_page():
                 ui.notify("Please select at least one element.", color="negative")
                 return
             try:
-                selected_spectrum = next(
-                    s for s in spectra if s.name == selected_name.value
-                )
+                selected_spectrum = next(s for s in spectra if s.name == selected_name.value)
                 new_spectrum = edit_spectrum(
                     old_spectrum=selected_spectrum,
                     new_name=spectrum_name.value,
@@ -70,7 +64,7 @@ def edit_spectra_page():
                 )
                 spectra = list_available_spectra()
                 selected_name.options = [s.name for s in spectra]
-                selected_name.value = new_spectrum.name # todo make the whole data management nicer
+                selected_name.value = new_spectrum.name  # todo make the whole data management nicer
                 tags.options = list(list_used_tags())
                 ui.notify("Spectrum metadata updated!", color="positive")
             except Exception as e:
@@ -79,13 +73,9 @@ def edit_spectra_page():
         async def on_delete():
             nonlocal spectra, spectrum_names
             try:
-                selected_spectrum = next(
-                    s for s in spectra if s.name == selected_name.value
-                )
+                selected_spectrum = next(s for s in spectra if s.name == selected_name.value)
                 delete_spectrum(selected_spectrum)
-                ui.notify(
-                    f"Spectrum '{selected_spectrum.name}' deleted!", color="positive"
-                )
+                ui.notify(f"Spectrum '{selected_spectrum.name}' deleted!", color="positive")
                 spectra = list_available_spectra()
                 if not spectra:
                     ui.notify("No spectra available to edit.", color="info")
@@ -100,6 +90,4 @@ def edit_spectra_page():
 
         with ui.row().classes("w-full"):
             ui.button("Save Changes", on_click=on_save, color="primary").classes("mt-4")
-            ui.button("Delete Spectrum", on_click=on_delete, color="negative").classes(
-                "mt-4"
-            )
+            ui.button("Delete Spectrum", on_click=on_delete, color="negative").classes("mt-4")

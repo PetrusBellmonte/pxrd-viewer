@@ -53,7 +53,9 @@ class Line:
         with ui.expansion().bind_text_from(
             self, "display_name", lambda x: self.title if self.title else x
         ) as expansion:
-            ui.input("Display name", value=self.display_name, on_change=update_figure).bind_value(self, "display_name")
+            ui.input(
+                "Display name", value=self.display_name, on_change=update_figure
+            ).bind_value(self, "display_name")
 
             def update_line_color(e):
                 self.color = e.color
@@ -84,14 +86,18 @@ class Line:
                 display_value=True,
                 on_change=update_figure,
             ).bind_value(self, "width")
-            ui.checkbox("Invert spectrum", on_change=update_figure).bind_value(self, "inverse")
+            ui.checkbox("Invert spectrum", on_change=update_figure).bind_value(
+                self, "inverse"
+            )
 
             def delete_line():
                 app.storage.client["active_lines"].remove(self)
                 expansion.delete()
                 update_figure()
 
-            ui.button("Delete", on_click=delete_line).bind_visibility_from(self, "can_be_deleted")
+            ui.button("Delete", on_click=delete_line).bind_visibility_from(
+                self, "can_be_deleted"
+            )
         return expansion
 
 
@@ -154,7 +160,9 @@ def add_line_controller(line: Line, move_to_top: bool = False):
             element = line.controller()
             app.storage.client["line_controllers"][id(line)] = element
             if move_to_top:
-                element.move(target_index=2)  # todo: make dynamic based on number of static elements
+                element.move(
+                    target_index=2
+                )  # todo: make dynamic based on number of static elements
     update_figure()
 
 
@@ -168,7 +176,9 @@ def main():
         app.storage.client["active_lines"] = []
 
         if not spectra:
-            ui.label("No spectra available. Please add spectra first.").classes("text-red")
+            ui.label("No spectra available. Please add spectra first.").classes(
+                "text-red"
+            )
         else:
             selected_obj = spectra[0]
             selected_line = Line.from_spectrum(
@@ -221,7 +231,9 @@ def main():
 
                 def activate_rotation():
                     selected_spectrum = next_spectrum()
-                    rot_line = Line.from_spectrum(selected_spectrum, can_be_deleted=False, title="(Rot)")
+                    rot_line = Line.from_spectrum(
+                        selected_spectrum, can_be_deleted=False, title="(Rot)"
+                    )
                     app.storage.client["rotation_line"] = rot_line
                     add_line_controller(rot_line, move_to_top=True)
                     update_figure()
@@ -255,7 +267,9 @@ def main():
                         rot_line.spectrum = selected_obj
                         update_figure()
 
-                ui.button("Activate Spectrum Rotation", on_click=activate_rotation).bind_visibility_from(
+                ui.button(
+                    "Activate Spectrum Rotation", on_click=activate_rotation
+                ).bind_visibility_from(
                     app.storage.client, "rotation_line", lambda x: x is None
                 )
                 with (

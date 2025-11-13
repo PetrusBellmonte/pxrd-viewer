@@ -30,9 +30,7 @@ class Spectrum:
         if not self.source_file.exists():
             raise FileNotFoundError(f"Source file {self.source_file} does not exist.")
 
-        self.contained_elements = (
-            contained_elements if contained_elements is not None else {}
-        )
+        self.contained_elements = contained_elements if contained_elements is not None else {}
         self.tags = tags if tags is not None else []
         self.description = description
         self.display_name = display_name
@@ -217,10 +215,12 @@ def load_xyd_file(uploaded_file: io.BytesIO) -> tuple[np.ndarray, np.ndarray]:
     y = y / np.max(y)  # Normalize intensity
     return x, y
 
+
 def read_raw_file(data_source: io.BytesIO) -> dict:
     data = data_source.read()
+
     def read_str(offset, length):
-        return data[offset:offset+length].decode("ascii", errors="ignore").rstrip("\x00")
+        return data[offset : offset + length].decode("ascii", errors="ignore").rstrip("\x00")
 
     def read_u16(offset):
         return struct.unpack_from("<H", data, offset)[0]
@@ -230,7 +230,7 @@ def read_raw_file(data_source: io.BytesIO) -> dict:
 
     def read_s16_array(offset, count):
         return struct.unpack_from(f"<{count}h", data, offset)
-    
+
     def read_s32_array(offset, count):
         return struct.unpack_from(f"<{count}i", data, offset)
 
@@ -250,27 +250,27 @@ def read_raw_file(data_source: io.BytesIO) -> dict:
         "radiation_false": read_float(0x146),
     }
 
-
-    if not result['machine']in ['POLY II', 'Powdat']:
+    if result["machine"] not in ["POLY II", "Powdat"]:
         raise ValueError(f"Unsupported machine type. Got {result['machine']}, expected 'POLY II' or 'Powdat'.")
     # DataInfo struct at 0x600 for POLY II, 0x800 for Powdat
-    info_offset = 0x600 if result['machine'] == 'POLY II' else 0x800
+    info_offset = 0x600 if result["machine"] == "POLY II" else 0x800
     result["collection_start_date"] = read_str(info_offset, 0x10)
-    result["collection_end_date"] = read_str(info_offset+0x10, 0x10)
-    result["num_points"] = read_u16(info_offset+0x22)
-    result["theta_start"] = read_float(info_offset+0x2C) 
-    result["theta_end"] = read_float(info_offset+0x34)
-    result["theta_stepsize"] = read_float(info_offset+0x3C)
-    result["time_per_step"] = read_float(info_offset+0x44)
-    result["min_cnt"] = read_u32(info_offset+0x78)
-    result["max_cnt"] = read_u32(info_offset+0x7C)
+    result["collection_end_date"] = read_str(info_offset + 0x10, 0x10)
+    result["num_points"] = read_u16(info_offset + 0x22)
+    result["theta_start"] = read_float(info_offset + 0x2C)
+    result["theta_end"] = read_float(info_offset + 0x34)
+    result["theta_stepsize"] = read_float(info_offset + 0x3C)
+    result["time_per_step"] = read_float(info_offset + 0x44)
+    result["min_cnt"] = read_u32(info_offset + 0x78)
+    result["max_cnt"] = read_u32(info_offset + 0x7C)
 
     data_offset = info_offset + 0x200
-    if result['machine'] == 'POLY II':
+    if result["machine"] == "POLY II":
         result["data"] = read_s16_array(data_offset, result["num_points"])
-    elif result['machine'] == 'Powdat':
+    elif result["machine"] == "Powdat":
         result["data"] = read_s32_array(data_offset, result["num_points"])
     return result
+
 
 def raw_info_to_normalized_numpy(info):
     x = np.linspace(info["theta_start"], info["theta_end"], info["num_points"])
@@ -278,6 +278,7 @@ def raw_info_to_normalized_numpy(info):
     y = np.array(info["data"], dtype=np.float32)
     y /= np.max(y)  # Normalize to max of 1.0
     return x, y
+
 
 def load_raw_file(uploaded_file: io.BytesIO) -> tuple[np.ndarray, np.ndarray]:
     info = read_raw_file(uploaded_file)
@@ -298,9 +299,7 @@ def list_available_spectra() -> list[Spectrum]:
         with open(meta_file, "r") as f:
             meta = yaml.safe_load(f)
         assert "name" in meta, f"Meta file {meta_file} is missing 'name' field."
-        assert "source_file" in meta, (
-            f"Meta file {meta_file} is missing 'source_file' field."
-        )
+        assert "source_file" in meta, f"Meta file {meta_file} is missing 'source_file' field."
         spectrum = Spectrum.from_meta(meta, meta_file)
         spectra.append(spectrum)
     return spectra
@@ -382,22 +381,10 @@ def edit_spectrum(
         raise FileNotFoundError(f"Spectrum '{old_spectrum.name}' does not exist.")
 
     updated_name = new_name if new_name is not None else old_spectrum.name
-    updated_elements = (
-        contained_elements
-        if contained_elements is not None
-        else old_spectrum.contained_elements
-    )
+    updated_elements = contained_elements if contained_elements is not None else old_spectrum.contained_elements
     updated_tags = tags if tags is not None else old_spectrum.tags
-    updated_description = (
-        description
-        if description is not None
-        else getattr(old_spectrum, "description", "")
-    )
-    updated_display_name = (
-        display_name
-        if display_name is not None
-        else getattr(old_spectrum, "display_name", None)
-    )
+    updated_description = description if description is not None else getattr(old_spectrum, "description", "")
+    updated_display_name = display_name if display_name is not None else getattr(old_spectrum, "display_name", None)
     source_file = old_spectrum.source_file
 
     # If renaming, update file names

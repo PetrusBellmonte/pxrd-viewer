@@ -4,9 +4,7 @@ from nicegui import ui
 
 def tag_select(options, label, **kwargs):
     element = (
-        ui.select(
-            options=options, with_input=True, multiple=True, label=label, **kwargs
-        )
+        ui.select(options=options, with_input=True, multiple=True, label=label, **kwargs)
         .props("new-value-mode=add-unique use-chips")
         .classes("my-chips")
     )
