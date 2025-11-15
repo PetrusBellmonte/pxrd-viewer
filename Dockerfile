@@ -5,6 +5,8 @@ WORKDIR /app
 
 COPY pyproject.toml /app
 
+RUN apt-get update && apt-get install -y build-essential gcc python3-dev
+
 RUN pip install --upgrade pip && \
     pip install pip-tools wheel
 
