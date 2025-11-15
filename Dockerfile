@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY pyproject.toml /app
 
-RUN apt-get update && apt-get install -y build-essential gcc python3-dev
+#RUN apt-get update && apt-get install -y build-essential gcc python3-dev
 
 RUN pip install --upgrade pip && \
     pip install pip-tools wheel
@@ -25,6 +25,6 @@ COPY --from=builder /app/wheels /wheels
 RUN pip install --upgrade pip && \
     pip install --no-index --find-links=/wheels /wheels/*
 
-EXPOSE 8501
+EXPOSE 8501 
 
 CMD ["python", "pxrd_viewer/app.py"]
