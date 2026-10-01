@@ -292,7 +292,7 @@ def list_available_spectra() -> list[Spectrum]:
     Lists all available spectra.
 
     Returns:
-        list[Spectrum]: A list of Spectrum objects representing available spectra.
+        list[Spectrum]: A list of Spectrum objects representing available spectra, sorted by name.
     """
     spectra = []
     for meta_file in DATA_DIR.glob("*.meta"):
@@ -302,6 +302,7 @@ def list_available_spectra() -> list[Spectrum]:
         assert "source_file" in meta, f"Meta file {meta_file} is missing 'source_file' field."
         spectrum = Spectrum.from_meta(meta, meta_file)
         spectra.append(spectrum)
+    spectra.sort(key=lambda s: s.name.casefold())
     return spectra
 
 

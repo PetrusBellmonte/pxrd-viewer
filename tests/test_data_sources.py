@@ -30,3 +30,17 @@ def test_load_xyd_file_shape_and_normalization(xyd_file_path):
     assert np.isclose(np.max(y), 1.0)
     # Check that there are at least two data points
     assert len(x) >= 2
+
+
+def test_list_available_spectra_sorted_alphabetically(tmp_path, monkeypatch):
+    from pxrd_viewer import data_sources
+
+    monkeypatch.setattr(data_sources, "DATA_DIR", tmp_path)
+    data_sources.list_available_spectra.cache_clear()
+    try:
+        for name in ["zinc", "Beta", "alpha", "Gamma"]:
+            data_sources.save_new_spectrum(name, (np.arange(3), np.ones(3)), {"Zn"}, [])
+        names = [s.name for s in data_sources.list_available_spectra()]
+        assert names == ["alpha", "Beta", "Gamma", "zinc"]
+    finally:
+        data_sources.list_available_spectra.cache_clear()

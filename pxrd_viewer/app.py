@@ -7,17 +7,21 @@ import os
 from pages import add_spectrum, edit_spectra  # noqa: F401
 
 
+DEFAULT_LINE_STYLE = {"opacity": 0.8, "width": 2.0}
+
+
 @binding.bindable_dataclass
 class Line:
     spectrum: Spectrum
     color: str
-    opacity: float
     dash: str
-    width: float
+    defaults: dict  # shared per-client line style, used for values not edited on this line
     title: str = None
     can_be_deleted: bool = True
     inverse: bool = True
     _display_name: str = None
+    _opacity: float = None
+    _width: float = None
 
     @property
     def display_name(self):
@@ -29,23 +33,52 @@ class Line:
     def display_name(self, value):
         self._display_name = value
 
+    # Setters ignore values equal to the effective value, so that the defaults being pushed
+    # into the line's slider by the binding do not count as an individual edit.
+    @property
+    def opacity(self):
+        return self.defaults["opacity"] if self._opacity is None else self._opacity
+
+    @opacity.setter
+    def opacity(self, value):
+        if value != self.opacity:
+            self._opacity = value
+
+    @property
+    def width(self):
+        return self.defaults["width"] if self._width is None else self._width
+
+    @width.setter
+    def width(self, value):
+        if value != self.width:
+            self._width = value
+
+    @property
+    def is_customized(self):
+        return self._opacity is not None or self._width is not None
+
+    def reset_style(self):
+        self._opacity = None
+        self._width = None
+
     @classmethod
     def from_spectrum(
         cls,
         spectrum: Spectrum,
         color: str = "#0000FF",
-        opacity: float = 0.8,
+        opacity: float = None,
         dash: str = "solid",
-        width: int = 2.0,
+        width: float = None,
         **kwargs,
     ):
         assert spectrum is not None, "Spectrum must be provided."
         return cls(
             spectrum=spectrum,
             color=color,
-            opacity=opacity,
             dash=dash,
-            width=width,
+            defaults=app.storage.client["line_defaults"],
+            _opacity=opacity,
+            _width=width,
             **kwargs,
         )
 
@@ -85,6 +118,14 @@ class Line:
                 on_change=update_figure,
             ).bind_value(self, "width")
             ui.checkbox("Invert spectrum", on_change=update_figure).bind_value(self, "inverse")
+
+            def reset_style():
+                self.reset_style()
+                update_figure()
+
+            ui.button("Use defaults", icon="restart_alt", on_click=reset_style).props(
+                "flat dense"
+            ).bind_visibility_from(self, "is_customized")
 
             def delete_line():
                 app.storage.client["active_lines"].remove(self)
@@ -167,6 +208,7 @@ def main():
         spectrum_names = [s.name for s in spectra]
 
         app.storage.client["active_lines"] = []
+        app.storage.client["line_defaults"] = dict(DEFAULT_LINE_STYLE)
 
         if not spectra:
             ui.label("No spectra available. Please add spectra first.").classes("text-red")
@@ -189,6 +231,7 @@ def main():
                 margin_t=20,
                 margin_b=20,
                 margin_l=20,
+                xaxis_title="q / Å<sup>-1</sup>",
             )
             app.storage.client["fig"] = fig
 
@@ -276,6 +319,33 @@ def main():
                     ui.button("Delete", on_click=delete_rotation)
                     ui.button("Next", on_click=next_rotation)
                     ui.button("Pin", on_click=pin_rotation)
+
+            # Default line style, applies to all lines whose values were not edited individually
+            line_defaults = app.storage.client["line_defaults"]
+            with ui.card().classes("w-full"):
+                ui.label("Default line style").classes("text-lg font-semibold")
+                with ui.row().classes("w-full no-wrap gap-8"):
+                    with ui.column().classes("grow"):
+                        altui.slider(
+                            0.01,
+                            1.0,
+                            label="Opacity",
+                            display_value=True,
+                            step=0.01,
+                            on_change=update_figure,
+                        ).bind_value(line_defaults, "opacity")
+                    with ui.column().classes("grow"):
+                        altui.slider(
+                            0,
+                            3,
+                            step=0.1,
+                            label="Width",
+                            display_value=True,
+                            on_change=update_figure,
+                        ).bind_value(line_defaults, "width")
+                with ui.row().classes("items-center gap-1 text-grey-7 text-sm"):
+                    ui.icon("info")
+                    ui.label("Applies to all lines that were not adjusted individually.")
 
             app.storage.client["line_controllers"] = {}
             with ui.column().classes("w-full") as line_controls:
