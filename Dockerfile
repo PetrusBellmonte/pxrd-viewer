@@ -1,5 +1,5 @@
 # ----------- Builder stage -----------
-FROM python:3.11-slim AS builder
+FROM python:3.14-slim AS builder
 
 WORKDIR /app
 
@@ -15,16 +15,24 @@ RUN pip-compile pyproject.toml --output-file requirements.txt && \
     pip wheel --wheel-dir=/app/wheels -r requirements.txt
 
 # ----------- Final stage -----------
-FROM python:3.11-slim
+FROM python:3.14-slim
+
+# Pick up Debian security fixes not yet in the base image
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY pxrd_viewer /app/pxrd_viewer
 COPY --from=builder /app/wheels /wheels
 
-RUN pip install --upgrade pip && \
-    pip install --no-index --find-links=/wheels /wheels/*
+# pip is only needed for installation; remove it (and its vendored libs) afterwards
+RUN pip install --no-index --find-links=/wheels /wheels/* && \
+    rm -rf /wheels && \
+    pip uninstall -y pip && \
+    rm -rf /usr/local/lib/python3.*/ensurepip
 
-EXPOSE 8501 
+ENV PXRD_PRODUCTION=1
+
+EXPOSE 8080
 
 CMD ["python", "pxrd_viewer/app.py"]
